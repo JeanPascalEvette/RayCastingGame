@@ -8,8 +8,9 @@ public static class RayCasting
 {
     static GameObject[] defaultColliders = VisionCollider.GetListVisionObjects();
 
-    public static Vector3[] CastRay(Vector3 startPost, Vector3 endPos, float pollingFrequency, GameObject[] listColliders = null)
+    public static Vector3[] CastRay(Vector3 startPost, Vector3 endPos, float pollingFrequency, out GameObject visionBreaker, GameObject[] listColliders = null)
     {
+        visionBreaker = null;
         if (listColliders == null)
             listColliders = defaultColliders;
         List<Vector3> hits = new List<Vector3>();
@@ -29,8 +30,10 @@ public static class RayCasting
                 Debug.DrawLine(previousPos, currentPos, Color.red);
                 var vc = col.GetComponent<VisionCollider>();
                 if (vc != null && !vc.isSeeThrough())
+                {
+                    visionBreaker = col;
                     break;
-                
+                }
             }
             else
             {
