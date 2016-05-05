@@ -6,7 +6,7 @@ using UnityEngine;
 
 public static class RayCasting
 {
-    static GameObject[] defaultColliders = GameObject.FindGameObjectsWithTag("Player");
+    static GameObject[] defaultColliders = VisionCollider.GetListVisionObjects();
 
     public static Vector3[] CastRay(Vector3 startPost, Vector3 endPos, float pollingFrequency, GameObject[] listColliders = null)
     {
@@ -17,18 +17,24 @@ public static class RayCasting
         float numSteps = direction.magnitude / pollingFrequency;
         Vector3 previousPos = startPost;
         Vector3 currentPos = startPost;
+        GameObject col;
         for (int i = 0; i < (int)(numSteps); i++)
         {
             previousPos = currentPos;
             currentPos += direction * (1.0f/numSteps);
-            if(TestCollision(currentPos, listColliders))
+            col = TestCollision(currentPos, listColliders);
+            if (col != null)
             {
                 hits.Add(currentPos);
-                Debug.DrawLine(previousPos, currentPos, Color.green);
+                Debug.DrawLine(previousPos, currentPos, Color.red);
+                var vc = col.GetComponent<VisionCollider>();
+                if (vc != null && !vc.isSeeThrough())
+                    break;
+                
             }
             else
             {
-                Debug.DrawLine(previousPos, currentPos, Color.red);
+                Debug.DrawLine(previousPos, currentPos, Color.green);
             }
         }
 
@@ -36,7 +42,7 @@ public static class RayCasting
     }
 
 
-    public static bool TestCollision(Vector3 position, GameObject[] listColliders)
+    public static GameObject TestCollision(Vector3 position, GameObject[] listColliders)
     {
         foreach(GameObject collider in listColliders)
         {
@@ -45,9 +51,9 @@ public static class RayCasting
             bool checkY = position.y < bounds.max.y && position.y > bounds.min.y;
             bool checkZ = position.z < bounds.max.z && position.z > bounds.min.z;
             if (checkX && checkY && checkZ)
-                return true;
+                return collider;
         }
-        return false;
+        return null;
     }
 }
 
