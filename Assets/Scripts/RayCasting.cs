@@ -8,6 +8,64 @@ public static class RayCasting
 {
     static GameObject[] defaultColliders = VisionCollider.GetListVisionObjects();
 
+    public struct ViewCastInfo
+    {
+        public bool hit;
+        public Vector3 endPoint;
+        public float distance;
+        public float angle;
+
+        public ViewCastInfo(bool _hit, Vector3 _endPoint, float _distance, float _angle) { hit = _hit;  endPoint = _endPoint; distance = _distance; angle = _angle; }
+    }
+
+    public struct EdgeInfo
+    {
+        public Vector3 pointA;
+        public Vector3 pointB;
+
+        public EdgeInfo(Vector3 _pointA, Vector3 _pointB) { pointA = _pointA; pointB = _pointB; }
+    }
+
+    public static ViewCastInfo ViewCast(Transform startObj, Vector3 dir, float length, float pollingFrequency)
+    {
+        float numSteps = length / pollingFrequency;
+        Vector3 previousPos = startObj.position;
+        Vector3 currentPos = startObj.position;
+        Transform col;
+        for (int i = 0; i < (int)(numSteps); i++)
+        {
+            previousPos = currentPos;
+            currentPos += dir * (length / numSteps);
+            col = TestCollision(currentPos, defaultColliders);
+            if (col != null && col != startObj)
+            {
+                return new ViewCastInfo(true, currentPos, (length / numSteps) * i, 0f);
+            }
+        }
+        return new ViewCastInfo(false, startObj.position + dir * length, length, 0f);
+    }
+
+    public static bool CheckRay(Transform startObj, Transform endObj, float pollingFrequency)
+    {
+        Vector3 direction = (endObj.position - startObj.position);
+        float numSteps = direction.magnitude / pollingFrequency;
+        Vector3 previousPos = startObj.position;
+        Vector3 currentPos = startObj.position;
+        Transform col;
+        for (int i = 0; i < (int)(numSteps); i++)
+        {
+            previousPos = currentPos;
+            currentPos += direction * (1.0f / numSteps);
+            col = TestCollision(currentPos, defaultColliders);
+            if (col != null && col != startObj && col != endObj)
+            {
+                return false;
+            }
+        }
+        return true;
+
+    }
+
     public static Vector3[] CastRay(Vector3 startPost, Vector3 endPos, float pollingFrequency, out GameObject visionBreaker, GameObject[] listColliders = null)
     {
         visionBreaker = null;
@@ -18,7 +76,7 @@ public static class RayCasting
         float numSteps = direction.magnitude / pollingFrequency;
         Vector3 previousPos = startPost;
         Vector3 currentPos = startPost;
-        GameObject col;
+        Transform col;
         for (int i = 0; i < (int)(numSteps); i++)
         {
             previousPos = currentPos;
@@ -31,7 +89,7 @@ public static class RayCasting
                 var vc = col.GetComponent<VisionCollider>();
                 if (vc != null && !vc.isSeeThrough())
                 {
-                    visionBreaker = col;
+                    visionBreaker = col.gameObject;
                     break;
                 }
             }
@@ -45,7 +103,7 @@ public static class RayCasting
     }
 
 
-    public static GameObject TestCollision(Vector3 position, GameObject[] listColliders)
+    public static Transform TestCollision(Vector3 position, GameObject[] listColliders)
     {
         foreach(GameObject collider in listColliders)
         {
@@ -54,7 +112,7 @@ public static class RayCasting
             bool checkY = position.y < bounds.max.y && position.y > bounds.min.y;
             bool checkZ = position.z < bounds.max.z && position.z > bounds.min.z;
             if (checkX && checkY && checkZ)
-                return collider;
+                return collider.transform;
         }
         return null;
     }

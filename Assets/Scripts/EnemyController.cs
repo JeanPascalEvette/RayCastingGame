@@ -29,11 +29,13 @@ public class EnemyController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         transform.Rotate(new Vector3(0, Time.deltaTime * rotateSpeed, 0));
-        DrawVision();
     }
+    
 
     void DrawVision()
     {
+
+
         playerInSight = false;
         CastRay(30);
         CastRay(25);

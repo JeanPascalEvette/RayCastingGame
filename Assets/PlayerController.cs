@@ -4,7 +4,7 @@ using System.Collections;
 public class PlayerController : MonoBehaviour {
 
     [SerializeField]
-    private float moveSpeed;
+    private float moveSpeed ;
     private Rigidbody rb;
 	// Use this for initialization
 	void Start () {
@@ -17,25 +17,13 @@ public class PlayerController : MonoBehaviour {
         HandleInputs();	
 	}
 
+    void FixedUpdate()
+    {
+        rb.MovePosition(rb.position + rb.velocity * Time.fixedDeltaTime);
+    }
+
     void HandleInputs()
     {
-        Vector3 vel = Vector3.zero;
-        if (Input.GetKey(KeyCode.W))
-        {
-            vel.z = -moveSpeed;
-        }
-        else if (Input.GetKey(KeyCode.S))
-        {
-            vel.z = moveSpeed;
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            vel.x = moveSpeed;
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            vel.x = -moveSpeed;
-        }
-        rb.velocity = vel;
+        rb.velocity = new Vector3(-Input.GetAxisRaw("Horizontal"), 0, -Input.GetAxisRaw("Vertical")).normalized * moveSpeed;
     }
 }
