@@ -71,7 +71,7 @@ public static class RayCasting
     {
         foreach(GameObject collider in listColliders)
         {
-            if(collider.GetComponent<Collider>().bounds.Contains(collider.transform.TransformPoint(collider.transform.localRotation * collider.transform.InverseTransformPoint(position))))
+            if(collider.GetComponent<Collider>().bounds.Contains(position))
                 return collider.transform;
         }
         return null;
