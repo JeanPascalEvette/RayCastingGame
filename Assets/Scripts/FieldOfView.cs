@@ -50,7 +50,7 @@ public class FieldOfView : MonoBehaviour {
         listObstacles = GameObject.Find("Obstacles");
         player = GameObject.FindGameObjectWithTag("Player");
 
-        StartCoroutine(FindTargetsWithDelay(.2f));
+        //StartCoroutine(FindTargetsWithDelay(.2f));
     }
 
     void LateUpdate()
@@ -60,12 +60,14 @@ public class FieldOfView : MonoBehaviour {
 
     void DrawFieldOfView()
     {
+        VisibleTargets.Clear();
         int stepCount = Mathf.RoundToInt(viewAngle * meshResolution);
         float stepAngleSize = viewAngle / stepCount;
 
 
         List<Vector3> viewPoints = new List<Vector3>();
         RayCasting.ViewCastInfo oldViewCast = new RayCasting.ViewCastInfo();
+        bool isLastPartial = false;
         for(int i = 0; i <= stepCount; i ++)
         {
             float angle = transform.eulerAngles.y - viewAngle / 2 + stepAngleSize * i;
@@ -85,15 +87,36 @@ public class FieldOfView : MonoBehaviour {
 
             }
 
-            viewPoints.Add(newViewCast.endPoint);
+            
 
             if(newViewCast.vcFound != null && newViewCast.vcFound.isSeeThrough())
             {
+                if(!isLastPartial)
+                    viewPoints.Add(newViewCast.endPoint);
+
                 var ignoreList = new VisionCollider[1];
                 ignoreList[0] = newViewCast.vcFound;
                 var partVC = PartialViewCast(newViewCast.endPoint, newViewCast.angle, viewRadius - newViewCast.distance, ignoreList);
                 viewPoints.Add(partVC.endPoint);
+
+                if (isLastPartial)
+                    viewPoints.Add(newViewCast.endPoint);
+
+
+
+                if (partVC.vcFound != null && !VisibleTargets.Contains(partVC.vcFound.transform))
+                    VisibleTargets.Add(partVC.vcFound.transform);
+
+                isLastPartial = !isLastPartial;
+
             }
+            else
+            {
+                viewPoints.Add(newViewCast.endPoint);
+            }
+
+            if (newViewCast.vcFound != null && !VisibleTargets.Contains(newViewCast.vcFound.transform))
+                VisibleTargets.Add(newViewCast.vcFound.transform);
 
 
             //Debug.DrawLine(transform.position, newViewCast.endPoint, Color.blue);
@@ -168,6 +191,8 @@ public class FieldOfView : MonoBehaviour {
         return vci;
     }
 
+
+    /*
     IEnumerator FindTargetsWithDelay(float delay)
     {
         while(true)
@@ -191,7 +216,7 @@ public class FieldOfView : MonoBehaviour {
             }
         }
     }
-
+    */
 
     Collider[] GetListOfTargetsInRange()
     {
