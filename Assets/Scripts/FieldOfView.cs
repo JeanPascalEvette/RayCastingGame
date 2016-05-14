@@ -86,6 +86,16 @@ public class FieldOfView : MonoBehaviour {
             }
 
             viewPoints.Add(newViewCast.endPoint);
+
+            if(newViewCast.vcFound != null && newViewCast.vcFound.isSeeThrough())
+            {
+                var ignoreList = new VisionCollider[1];
+                ignoreList[0] = newViewCast.vcFound;
+                var partVC = PartialViewCast(newViewCast.endPoint, newViewCast.angle, viewRadius - newViewCast.distance, ignoreList);
+                viewPoints.Add(partVC.endPoint);
+            }
+
+
             //Debug.DrawLine(transform.position, newViewCast.endPoint, Color.blue);
             oldViewCast = newViewCast;
         }
@@ -144,7 +154,16 @@ public class FieldOfView : MonoBehaviour {
     RayCasting.ViewCastInfo ViewCast(float globalAngle)
     {
         Vector3 dir = DirFromAngle(globalAngle, true);
-        RayCasting.ViewCastInfo vci = RayCasting.ViewCast(transform, dir, viewRadius, pollingFrequency);
+        RayCasting.ViewCastInfo vci = RayCasting.ViewCast(transform.position, dir, viewRadius, pollingFrequency);
+        vci.angle = globalAngle;
+        return vci;
+    }
+
+
+    RayCasting.ViewCastInfo PartialViewCast(Vector3 startPos, float globalAngle, float length, VisionCollider[] ignoreList = null)
+    {
+        Vector3 dir = DirFromAngle(globalAngle, true);
+        RayCasting.ViewCastInfo vci = RayCasting.ViewCast(startPos, dir, length, pollingFrequency, ignoreList);
         vci.angle = globalAngle;
         return vci;
     }
