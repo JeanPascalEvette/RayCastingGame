@@ -48,7 +48,7 @@ public static class RayCasting
 
             if (LineAABBIntersection(minPt, maxPt, startPoint, endPoint, ref vecIntersection, ref flFraction))
             {
-                if (minDist >` flFraction * length)
+                if (minDist > flFraction * length)
                 {
                     minDist = flFraction * length;
                     hitFound = new ViewCastInfo(true, vecIntersection, flFraction * length, 0f, collider.GetComponent<VisionCollider>());
