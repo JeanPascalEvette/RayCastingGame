@@ -27,13 +27,13 @@ public static class RayCasting
         public EdgeInfo(Vector3 _pointA, Vector3 _pointB) { pointA = _pointA; pointB = _pointB; }
     }
 
-    public static ViewCastInfo ViewCast(Vector3 startPos, Vector3 dir, float length, float pollingFrequency, VisionCollider[] ignoreList = null)
+    public static ViewCastInfo ViewCast(Vector3 startPos, Vector3 dir, float length, float pollingFrequency, VisionCollider currentMedium = null)
     {
         ViewCastInfo hitFound = new ViewCastInfo(false, startPos + dir * length, length, 0f, null);
         float minDist = length;
         foreach(var collider in defaultColliders)
         {
-            if (ignoreList != null && collider.GetComponent<VisionCollider>() != null && ignoreList.Contains<VisionCollider>(collider.GetComponent<VisionCollider>()))
+            if (currentMedium != null && collider.GetComponent<VisionCollider>() != null && currentMedium == collider.GetComponent<VisionCollider>())
                 continue;
 
             var vecIntersection = Vector3.zero;

@@ -67,13 +67,12 @@ public class FieldOfView : MonoBehaviour {
 
         List<Vector3> viewPoints = new List<Vector3>();
         List<Vector3> extraViewPoints = new List<Vector3>();
-        var lastIsPartial = false;
         RayCasting.ViewCastInfo lastPartialVC = new RayCasting.ViewCastInfo();
-        var lastIgnoreList = new VisionCollider[0];
         RayCasting.ViewCastInfo oldViewCast = new RayCasting.ViewCastInfo();
-        RayCasting.ViewCastInfo oldPartialViewCast = new RayCasting.ViewCastInfo();
+        VisionCollider currentMedium = new VisionCollider();
         for (int i = 0; i <= stepCount; i ++)
         {
+            currentMedium = new VisionCollider();
             float angle = transform.eulerAngles.y - viewAngle / 2 + stepAngleSize * i;
             RayCasting.ViewCastInfo newViewCast = ViewCast(angle);
 
@@ -96,9 +95,8 @@ public class FieldOfView : MonoBehaviour {
             if(newViewCast.vcFound != null && newViewCast.vcFound.isSeeThrough())
             {
 
-                var ignoreList = new VisionCollider[1];
-                ignoreList[0] = newViewCast.vcFound;
-                var partVC = PartialViewCast(transform.position, newViewCast.angle, viewRadius, ignoreList);
+                currentMedium = newViewCast.vcFound;
+                var partVC = PartialViewCast(transform.position, newViewCast.angle, viewRadius, currentMedium);
                 //if (partVC.vcFound != null && partVC.vcFound.name == "Wall (1)")
                 //    Debug.DrawLine(newViewCast.endPoint, partVC.endPoint, Color.red);
 
@@ -111,7 +109,7 @@ public class FieldOfView : MonoBehaviour {
                     {
                         //Debug.DrawLine(transform.position, lastPartialVC.endPoint, Color.green);
                         //Debug.DrawLine(transform.position, partVC.endPoint, Color.magenta);
-                        RayCasting.EdgeInfo edge = PartialFindEdge(lastPartialVC, partVC, transform.position, ignoreList);
+                        RayCasting.EdgeInfo edge = PartialFindEdge(lastPartialVC, partVC, transform.position, currentMedium);
                         if (edge.pointA != Vector3.zero)
                             extraViewPoints.Add(edge.pointA);
                         if (edge.pointB != Vector3.zero)
@@ -202,7 +200,7 @@ public class FieldOfView : MonoBehaviour {
         return new RayCasting.EdgeInfo(minPoint, maxPoint);
     }
 
-    RayCasting.EdgeInfo PartialFindEdge(RayCasting.ViewCastInfo minViewCast, RayCasting.ViewCastInfo maxViewCast, Vector3 startPos, VisionCollider[] ignoreList = null)
+    RayCasting.EdgeInfo PartialFindEdge(RayCasting.ViewCastInfo minViewCast, RayCasting.ViewCastInfo maxViewCast, Vector3 startPos, VisionCollider currentMedium = null)
     {
         float minAngle = minViewCast.angle;
         float maxAngle = maxViewCast.angle;
@@ -212,7 +210,7 @@ public class FieldOfView : MonoBehaviour {
         for (int i = 0; i < edgeResolveIterations; i++)
         {
             float angle = (minAngle + maxAngle) / 2.0f;
-            RayCasting.ViewCastInfo newViewCast = PartialViewCast(startPos, angle, maxViewCast.distance, ignoreList);
+            RayCasting.ViewCastInfo newViewCast = PartialViewCast(startPos, angle, maxViewCast.distance, currentMedium);
 
             bool edgeDistanceThresholdExceeded = Mathf.Abs(minViewCast.distance - newViewCast.distance) > edgeDistanceThreshold;
             if (newViewCast.hit == minViewCast.hit && !edgeDistanceThresholdExceeded)
@@ -239,10 +237,10 @@ public class FieldOfView : MonoBehaviour {
     }
 
 
-    RayCasting.ViewCastInfo PartialViewCast(Vector3 startPos, float globalAngle, float length, VisionCollider[] ignoreList = null)
+    RayCasting.ViewCastInfo PartialViewCast(Vector3 startPos, float globalAngle, float length, VisionCollider currentMedium = null)
     {
         Vector3 dir = DirFromAngle(globalAngle, true);
-        RayCasting.ViewCastInfo vci = RayCasting.ViewCast(startPos, dir, length, pollingFrequency, ignoreList);
+        RayCasting.ViewCastInfo vci = RayCasting.ViewCast(startPos, dir, length, pollingFrequency, currentMedium);
         vci.angle = globalAngle;
         return vci;
     }
