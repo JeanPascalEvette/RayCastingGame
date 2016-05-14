@@ -21,6 +21,7 @@ public class FieldOfView : MonoBehaviour {
     public MeshFilter viewMeshFilter;
     Mesh viewMesh;
 
+    private VisionCollider air = null;
 
     public List<Transform> VisibleTargets = new List<Transform>();
 
@@ -69,10 +70,10 @@ public class FieldOfView : MonoBehaviour {
         List<Vector3> extraViewPoints = new List<Vector3>();
         RayCasting.ViewCastInfo lastPartialVC = new RayCasting.ViewCastInfo();
         RayCasting.ViewCastInfo oldViewCast = new RayCasting.ViewCastInfo();
-        VisionCollider currentMedium = new VisionCollider();
+        VisionCollider currentMedium;
         for (int i = 0; i <= stepCount; i ++)
         {
-            currentMedium = new VisionCollider();
+            currentMedium = air;
             float angle = transform.eulerAngles.y - viewAngle / 2 + stepAngleSize * i;
             RayCasting.ViewCastInfo newViewCast = ViewCast(angle);
 
