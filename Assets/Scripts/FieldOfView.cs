@@ -66,9 +66,9 @@ public class FieldOfView : MonoBehaviour {
 
 
         List<Vector3> viewPoints = new List<Vector3>();
+        List<Vector3> extraViewPoints = new List<Vector3>();
         RayCasting.ViewCastInfo oldViewCast = new RayCasting.ViewCastInfo();
-        bool isLastPartial = false;
-        for(int i = 0; i <= stepCount; i ++)
+        for (int i = 0; i <= stepCount; i ++)
         {
             float angle = transform.eulerAngles.y - viewAngle / 2 + stepAngleSize * i;
             RayCasting.ViewCastInfo newViewCast = ViewCast(angle);
@@ -91,29 +91,23 @@ public class FieldOfView : MonoBehaviour {
 
             if(newViewCast.vcFound != null && newViewCast.vcFound.isSeeThrough())
             {
-                if(!isLastPartial)
-                    viewPoints.Add(newViewCast.endPoint);
 
                 var ignoreList = new VisionCollider[1];
                 ignoreList[0] = newViewCast.vcFound;
                 var partVC = PartialViewCast(newViewCast.endPoint, newViewCast.angle, viewRadius - newViewCast.distance, ignoreList);
-                viewPoints.Add(partVC.endPoint);
+                
 
-                if (isLastPartial)
-                    viewPoints.Add(newViewCast.endPoint);
+                extraViewPoints.Add(partVC.endPoint);
+
 
 
 
                 if (partVC.vcFound != null && !VisibleTargets.Contains(partVC.vcFound.transform))
                     VisibleTargets.Add(partVC.vcFound.transform);
-
-                isLastPartial = !isLastPartial;
+                
 
             }
-            else
-            {
-                viewPoints.Add(newViewCast.endPoint);
-            }
+            viewPoints.Add(newViewCast.endPoint);
 
             if (newViewCast.vcFound != null && !VisibleTargets.Contains(newViewCast.vcFound.transform))
                 VisibleTargets.Add(newViewCast.vcFound.transform);
@@ -123,14 +117,26 @@ public class FieldOfView : MonoBehaviour {
             oldViewCast = newViewCast;
         }
 
-        int vertexCount = viewPoints.Count + 1;
+        int vertexCount = viewPoints.Count + extraViewPoints.Count + 1;
         Vector3[] vertices = new Vector3[vertexCount];
         int[] triangles = new int[(vertexCount - 2) * 3];
 
         vertices[0] = Vector3.zero;
-        for (int i = 0; i < vertexCount - 1; i++)
+        for (int i = 0; i < viewPoints.Count; i++)
         {
             vertices[i + 1] = transform.InverseTransformPoint(viewPoints[i]);
+
+            if (i < vertexCount - 2)
+            {
+                triangles[i * 3] = 0;
+                triangles[i * 3 + 1] = i + 1;
+                triangles[i * 3 + 2] = i + 2;
+            }
+        }
+
+        for (int i = viewPoints.Count; i < viewPoints.Count + extraViewPoints.Count; i++)
+        {
+            vertices[i + 1] = transform.InverseTransformPoint(extraViewPoints[i - viewPoints.Count]);
 
             if (i < vertexCount - 2)
             {
@@ -157,6 +163,34 @@ public class FieldOfView : MonoBehaviour {
         {
             float angle = (minAngle + maxAngle) / 2.0f;
             RayCasting.ViewCastInfo newViewCast = ViewCast(angle);
+
+            bool edgeDistanceThresholdExceeded = Mathf.Abs(minViewCast.distance - newViewCast.distance) > edgeDistanceThreshold;
+            if (newViewCast.hit == minViewCast.hit && !edgeDistanceThresholdExceeded)
+            {
+                minAngle = angle;
+                minPoint = newViewCast.endPoint;
+            }
+            else
+            {
+                maxAngle = angle;
+                maxPoint = newViewCast.endPoint;
+            }
+
+        }
+        return new RayCasting.EdgeInfo(minPoint, maxPoint);
+    }
+
+    RayCasting.EdgeInfo PartialFindEdge(RayCasting.ViewCastInfo minViewCast, RayCasting.ViewCastInfo maxViewCast, Vector3 startPos, VisionCollider[] ignoreList = null)
+    {
+        float minAngle = minViewCast.angle;
+        float maxAngle = maxViewCast.angle;
+        Vector3 minPoint = Vector3.zero;
+        Vector3 maxPoint = Vector3.zero;
+
+        for (int i = 0; i < edgeResolveIterations; i++)
+        {
+            float angle = (minAngle + maxAngle) / 2.0f;
+            RayCasting.ViewCastInfo newViewCast = PartialViewCast(startPos, angle, minViewCast.distance, ignoreList);
 
             bool edgeDistanceThresholdExceeded = Mathf.Abs(minViewCast.distance - newViewCast.distance) > edgeDistanceThreshold;
             if (newViewCast.hit == minViewCast.hit && !edgeDistanceThresholdExceeded)

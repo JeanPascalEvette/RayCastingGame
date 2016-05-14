@@ -29,6 +29,8 @@ public static class RayCasting
 
     public static ViewCastInfo ViewCast(Vector3 startPos, Vector3 dir, float length, float pollingFrequency, VisionCollider[] ignoreList = null)
     {
+        ViewCastInfo hitFound = new ViewCastInfo(false, startPos + dir * length, length, 0f, null);
+        float minDist = length;
         foreach(var collider in defaultColliders)
         {
             if (ignoreList != null && collider.GetComponent<VisionCollider>() != null && ignoreList.Contains<VisionCollider>(collider.GetComponent<VisionCollider>()))
@@ -46,10 +48,14 @@ public static class RayCasting
 
             if (LineAABBIntersection(minPt, maxPt, startPoint, endPoint, ref vecIntersection, ref flFraction))
             {
-                return new ViewCastInfo(true, vecIntersection, flFraction * length, 0f, collider.GetComponent<VisionCollider>());
+                if (minDist >` flFraction * length)
+                {
+                    minDist = flFraction * length;
+                    hitFound = new ViewCastInfo(true, vecIntersection, flFraction * length, 0f, collider.GetComponent<VisionCollider>());
+                }
             }
         }
-        return new ViewCastInfo(false, startPos + dir * length, length, 0f, null);
+        return hitFound;
 
 
         
