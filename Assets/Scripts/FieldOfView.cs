@@ -177,6 +177,10 @@ public class FieldOfView : MonoBehaviour {
     Collider[] GetListOfTargetsInRange()
     {
         List<Collider> targetsInRange = new List<Collider>();
+
+        // We call the function to check the collision in RayCasting
+        
+        //RayCasting.TestCollision(transform.position, listObstacles.transform.GetChild(0).Find("Wall");
         /*for (int i = 0; i < listObstacles.transform.childCount; i++)
         {
             if (Vector3.Distance(transform.position, listObstacles.transform.GetChild(i).position) < viewRadius)
