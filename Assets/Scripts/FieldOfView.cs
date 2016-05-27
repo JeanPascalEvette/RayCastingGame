@@ -16,7 +16,6 @@ public class FieldOfView : MonoBehaviour {
     public float meshResolution;
     public int edgeResolveIterations;
     public float edgeDistanceThreshold;
-    public float pollingFrequency;
 
     public MeshFilter viewMeshFilter;
     Mesh viewMesh;
